@@ -7,6 +7,7 @@
 
 ### Usage
 ```
+source ./source.sh
 ./make-test.sh -tag 6.5.0 -hv xen -arch arm64 -ip 192.168.2.240
 ```
 where 6.5.0 - eve tag, xen - hypervisor, arm64 - arch, ip - eve device reserved ip.
