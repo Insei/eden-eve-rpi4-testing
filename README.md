@@ -24,6 +24,12 @@ Waiting for EVE device boot into UEFI BIOS over the network
 6. Expect progress
 7. Example:
 ```
+Copying files for boot the installer via tftp
+ Make ipxe
+ Make UEFI BIOS for Rpi4
+Waiting for EVE device boot into UEFI BIOS over the network
+Waiting for the installation to complete
+Waiting for EVE to boot from internal storage
 ###########################################
 ########### Waiting results ###############
 ###########################################
