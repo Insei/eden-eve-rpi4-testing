@@ -6,8 +6,9 @@
 3. The content of the tftp server must be mounted in the tftp_boot folder.
 
 ### Usage
+```
 ./make-test.sh -tag 6.5.0 -hv xen -arch arm64 -ip 192.168.2.240
-
+```
 where 6.5.0 - eve tag, xen - hypervisor, arm64 - arch, ip - eve device reserved ip.
           
 ## For RPI4
