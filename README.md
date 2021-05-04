@@ -1,4 +1,4 @@
-# EVE func testing on real hardware (ARM)
+# EVE func network testing on real hardware (ARM)
 
 ## General settings
 1. You need to configure DHCP options 67 and 66.
