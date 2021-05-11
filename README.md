@@ -38,3 +38,15 @@ NGINX: OK
 Warning: Permanently added '[192.168.2.240]:8027' (ECDSA) to the list of known hosts.
 UBUNTU: OK
 ```
+## For Packet servers
+You need to run the script on a server with a dedicated ip and open ports for eden.
+
+In automatic mode, a server is created on PACKET with the selected configuration.
+```
+source ./source.sh
+./make-test.sh -tag 6.5.0 -hv xen -arch arm64 -packet_server c1.large.arm -packet_location dfw2 \
+        -packet_project av9307cf-75c9-438d-b2d8-bbs87ab60s02
+```
+where -packet_server c1.large.arm -- configuration of the server, -packet_location dfw2 -- location of the packet server, 
+
+-packet_project av9307cf-75c9-438d-b2d8-bbs87ab60s02 -- packet project id
