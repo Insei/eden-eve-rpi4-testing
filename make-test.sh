@@ -87,16 +87,19 @@ function eden_test_ubuntu() {
 }
 
 ############### TFTP SECTION ############### 
-function tftp_make_ipxe() {
+function tftp_cp_ipxe() {
     cp "$EDEN_DIR"/dist/default-images/eve/ipxe.efi "$WORKSPACE"/tftp_boot/
     cp "$EDEN_DIR"/dist/default-images/eve/tftp/ipxe.efi.cfg "$WORKSPACE"/tftp_boot/
+}
+
+function tftp_cp_uboot_script() {
+    cp "$EDEN_DIR"/dist/default-images/eve/boot.scr.uimg "$WORKSPACE"/tftp_boot/
 }
 
 ############### TFTP RPi4 SECTION ###############
 rpi4_boot_files=(bcm2711-rpi-4-b.dtb config.txt fixup4.dat start4.elf u-boot.bin RPI_EFI.fd)
 
 function tftp_rm_rpi4_boot_files() {
-    
     for rpi4_boot_file in ${rpi4_boot_files[*]}; do
         rm -rf "$WORKSPACE"/tftp_boot/"$rpi4_boot_file"
     done
@@ -193,7 +196,8 @@ if [ "$tftp_dir_exist" = "true" ]; then
     echo "Copying files for boot the installer via tftp"
     echo " Make ipxe"
     # Copy ipxe.efi and ipxe.efi.cfg to tftp
-    tftp_make_ipxe
+    tftp_cp_ipxe
+    tftp_cp_uboot_script
     if [ $eve_arch == "arm64" ]; then
         echo " Make UEFI BIOS for Rpi4"
         # Replace U-boot to UEFI BIOS for RPi4 network booting. This is necessary for fast network booting, with u-boot the boot is very slow.
