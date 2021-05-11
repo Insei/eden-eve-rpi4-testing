@@ -1,4 +1,7 @@
 #!/bin/bash
+packet_server_info_exist="false"
+packet_server_id=""
+
 tftp_dir_exist="false"
 if [ -d "$WORKSPACE"/tftp_boot/ ]; then
     tftp_dir_exist="true"
@@ -37,6 +40,11 @@ function eden_setup() {
     ./eden config set default --key eve.hv --value="$eve_hv"
     ./eden setup -v debug --netboot=true
     cd "$WORKSPACE" || exit 1
+}
+
+function eden_get_ipxe_cfg_url() {
+    set_url_str=$(cat "$EDEN_DIR"/dist/default-images/eve/tftp/ipxe.efi.cfg | grep "set url")
+    echo "${set_url_str/"set url "/""}ipxe.efi.cfg"
 }
 
 function eden_start() {
@@ -125,11 +133,72 @@ function tftp_make_rpi4_uboot() {
 
 ################# EVE device detect ################
 function sleep_until_eve_is_loaded() {
+    counter_sleep=0
     while ! ping -w 1 "$eve_ip" &>/dev/null
     do
-        sleep 1
+        sleep 3
+        $counter_sleep=$((counter_sleep + 1))
+        if [ "$counter_sleep" -gt "600" ]; then
+            echo "Timeout waiting for EVE device"
+            return 1
+        fi
     done
 }
+################# PACKET HOST #####################
+function packet_cli_prepare() {
+    if [ "$packet_location" != "" ] && [ "$packet_server" != "" ] && [ "$packet_project" != "" ]; then
+        if [ "$PACKET_TOKEN" = "" ]; then
+            echo "PACKET_TOKEN is empty please set token"
+            exit 1
+        fi;
+        packet_server_info_exist="true"
+
+        if ! [ -e $HOME/go/bin/packet-cli ]; then
+            GO111MODULE=on go get github.com/packethost/packet-cli
+        fi
+    fi
+}
+
+function packet-cli() {
+    "$HOME"/go/bin/packet-cli $@
+}
+
+function packet_cli_create_eve() {
+    counter_create=${1:-0}
+    packet_id=$(packet-cli -j device create -f "$packet_location" -H eden-eve-test-"$packet_server"-01 \
+        -i "$(eden_get_ipxe_cfg_url)" -o custom_ipxe \
+        -P "$packet_server" --tags="eden,eve,auto,test" -p "$packet_project" | \
+        python packet/get-id.py)
+    if echo "$packet_id" | grep -q "00000000-0000-0000-0000-000000000000"; then
+        if [ "$counter_create" -gt "10" ]; then
+            echo "00000000-0000-0000-0000-000000000000"
+        fi
+        sleep 10
+        packet_cli_create_eve $((counter_create + 1))
+    else
+        echo $packet_id
+    fi
+}
+
+function packet_cli_get_ip() {
+    counter_ip=${1:-0}
+    packet_server_info=$(packet-cli -j device get -i $packet_server_id)
+    packet_ip=$(echo $packet_server_info | python packet/get-ip.py)
+    if echo "$packet_ip" | grep -q "0.0.0.0"; then
+        if [ "$counter_ip" -gt "50" ]; then
+            echo "0.0.0.0"
+        fi
+        sleep 10
+        packet_cli_get_ip $((counter_ip + 1))
+    else
+        echo $packet_ip
+    fi
+}
+
+function packet_cli_terminate_device() {
+    packet-cli -j device delete -i "$packet_server_id"
+}
+
 #################### OTHER #######################
 function make_clean() {
     if [ -d "$EDEN_DIR" ]; then
@@ -173,6 +242,30 @@ while true; do
           fi
           shift
           ;;
+     -packet_location*) #shellcheck disable=SC2039
+          packet_location="${1/-packet_location/}"
+          if [ -z "$packet_location" ]; then
+             packet_location="$2"
+             shift
+          fi
+          shift
+          ;;
+      -packet_server*) #shellcheck disable=SC2039
+          packet_server="${1/-packet_server/}"
+          if [ -z "$packet_server" ]; then
+             packet_server="$2"
+             shift
+          fi
+          shift
+          ;;
+       -packet_project*) #shellcheck disable=SC2039
+          packet_project="${1/-packet_project/}"
+          if [ -z "$packet_project" ]; then
+             packet_project="$2"
+             shift
+          fi
+          shift
+          ;;
        *) break
           ;;
    esac
@@ -205,7 +298,27 @@ if [ "$tftp_dir_exist" = "true" ]; then
     fi
 fi
 
-echo "Waiting for EVE device boot into UEFI BIOS over the network"
+# Check that all packet params is set, if yes download packet-cli and test packet server
+packet_cli_prepare
+if [ "$packet_server_info_exist" = "true" ]; then
+    packet_server_id=$(packet_cli_create_eve)
+    if [ "$packet_server_id" = "00000000-0000-0000-0000-000000000000" ]; then
+        echo "Timeout for create packet eve"
+        exit 1
+    fi
+    echo "Packet server ID is $packet_server_id"
+    echo "We are waiting until the packet receives its ip"
+    #sleep 60
+    packet_server_ip=$(packet_cli_get_ip)
+    if [ "$packet_server_ip" = "0.0.0.0" ]; then
+        echo "Timeout for getting packet ip"
+        exit 1
+    fi
+    echo "Packet device IP is $packet_server_ip"
+    eve_ip=$packet_server_ip
+fi
+
+echo "Waiting for EVE device boot over the network"
 sleep_until_eve_is_loaded
 
 # Switch back to u-boot for rpi4
@@ -238,4 +351,8 @@ if [ $ubuntu_test_result == 0 ]; then
     echo "UBUNTU: OK"
 else
     echo "UBUNTU: FAIL"
+fi
+
+if [ "$packet_server_info_exist" = "true" ]; then
+    packet_cli_terminate_device "$packet_server_id"
 fi
