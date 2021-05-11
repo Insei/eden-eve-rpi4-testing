@@ -1,7 +1,7 @@
 # EVE func network testing on real hardware (ARM)
 
 ## General settings
-1. You need to configure DHCP options 67 and 66.
+1. If you want test local machine(like rpi4, jetson), you need to configure DHCP options 67 - "ipxe.efi" and 66 - "<your local tftp server ip>".
 2. Setup DHCP ip reservation for your EVE device.
 3. The content of the tftp server must be mounted in the tftp_boot folder.
 
@@ -56,10 +56,10 @@ Example output:
 Copying files for boot the installer via tftp
  Make ipxe
  Make UEFI BIOS for Rpi4
-Creating packet server with ipxe cfg url: http://192.168.2.238:8888/eserver/ipxe.efi.cfg
+Creating packet server with ipxe cfg url: http://147.75.55.221:8888/eserver/ipxe.efi.cfg
 Packet server ID is 76a92672-28f3-4670-bda7-869382e86990
 We are waiting until the packet receives its ip
-Packet device IP is 147.75.55.110
+Packet server IP is 147.75.55.110
 Waiting for EVE device boot over the network
 Waiting for the installation to complete
 Waiting for EVE to boot from internal storage
