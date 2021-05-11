@@ -134,10 +134,10 @@ function tftp_make_rpi4_uboot() {
 ################# EVE device detect ################
 function sleep_until_eve_is_loaded() {
     counter_sleep=0
-    while ! ping -w 1 "$eve_ip" &>/dev/null
+    while ! ping -w 1 "$eve_ip" &>/dev/null && [ $counter_sleep -lt 600 ]
     do
         sleep 3
-        $counter_sleep=$((counter_sleep + 1))
+        let counter_sleep=counter_sleep+1
         if [ "$counter_sleep" -gt "600" ]; then
             echo "Timeout waiting for EVE device"
             return 1
@@ -185,8 +185,9 @@ function packet_cli_get_ip() {
     packet_server_info=$(packet-cli -j device get -i $packet_server_id)
     packet_ip=$(echo $packet_server_info | python packet/get-ip.py)
     if echo "$packet_ip" | grep -q "0.0.0.0"; then
-        if [ "$counter_ip" -gt "50" ]; then
+        if [ "$counter_ip" -gt "100" ]; then
             echo "0.0.0.0"
+            exit 1
         fi
         sleep 10
         packet_cli_get_ip $((counter_ip + 1))
@@ -301,20 +302,21 @@ fi
 # Check that all packet params is set, if yes download packet-cli and test packet server
 packet_cli_prepare
 if [ "$packet_server_info_exist" = "true" ]; then
+    echo "Creating packet server with ipxe cfg url: $(eden_get_ipxe_cfg_url)" 
     packet_server_id=$(packet_cli_create_eve)
     if [ "$packet_server_id" = "00000000-0000-0000-0000-000000000000" ]; then
-        echo "Timeout for create packet eve"
+        echo "Timeout for create packet server"
         exit 1
     fi
     echo "Packet server ID is $packet_server_id"
-    echo "We are waiting until the packet receives its ip"
-    #sleep 60
+    echo "We are waiting until the packet server receives its ip"
+    sleep 60
     packet_server_ip=$(packet_cli_get_ip)
     if [ "$packet_server_ip" = "0.0.0.0" ]; then
         echo "Timeout for getting packet ip"
         exit 1
     fi
-    echo "Packet device IP is $packet_server_ip"
+    echo "Packet server IP is $packet_server_ip"
     eve_ip=$packet_server_ip
 fi
 
