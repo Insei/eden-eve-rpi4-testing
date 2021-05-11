@@ -27,7 +27,7 @@ Waiting for EVE device boot into UEFI BIOS over the network
 Copying files for boot the installer via tftp
  Make ipxe
  Make UEFI BIOS for Rpi4
-Waiting for EVE device boot into UEFI BIOS over the network
+Waiting for EVE device boot over the network
 Waiting for the installation to complete
 Waiting for EVE to boot from internal storage
 ###########################################
@@ -50,3 +50,24 @@ source ./source.sh
 where -packet_server c1.large.arm -- configuration of the server, -packet_location dfw2 -- location of the packet server, 
 
 -packet_project av9307cf-75c9-438d-b2d8-bbs87ab60s02 -- packet project id
+
+Example output:
+```
+Copying files for boot the installer via tftp
+ Make ipxe
+ Make UEFI BIOS for Rpi4
+Creating packet server with ipxe cfg url: http://192.168.2.238:8888/eserver/ipxe.efi.cfg
+Packet server ID is 76a92672-28f3-4670-bda7-869382e86990
+We are waiting until the packet receives its ip
+Packet device IP is 147.75.55.110
+Waiting for EVE device boot over the network
+Waiting for the installation to complete
+Waiting for EVE to boot from internal storage
+###########################################
+########### Waiting results ###############
+###########################################
+###########################################
+NGINX: OK
+Warning: Permanently added '[147.75.55.110]:8027' (ECDSA) to the list of known hosts.
+UBUNTU: OK
+```
