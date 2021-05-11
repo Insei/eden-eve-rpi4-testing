@@ -1,7 +1,7 @@
 # EVE func network testing on real hardware (ARM)
 
 ## General settings
-1. If you want test local machine(like rpi4, jetson), you need to configure DHCP options 67 - "ipxe.efi" and 66 - "<your local tftp server ip>".
+1. If you want test local machine(like rpi4, jetson), you need to configure DHCP options 67 - "ipxe.efi" and 66 - ```<your local tftp server ip>```.
 2. Setup DHCP ip reservation for your EVE device.
 3. The content of the tftp server must be mounted in the tftp_boot folder.
 
