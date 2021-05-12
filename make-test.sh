@@ -105,7 +105,7 @@ function tftp_cp_uboot_script() {
 }
 
 ############### TFTP RPi4 SECTION ###############
-rpi4_boot_files=(bcm2711-rpi-4-b.dtb config.txt fixup4.dat start4.elf u-boot.bin RPI_EFI.fd)
+rpi4_boot_files=(overlays bcm2711-rpi-4-b.dtb config.txt fixup4.dat start4.elf u-boot.bin RPI_EFI.fd)
 
 function tftp_rm_rpi4_boot_files() {
     for rpi4_boot_file in ${rpi4_boot_files[*]}; do
@@ -116,8 +116,8 @@ function tftp_rm_rpi4_boot_files() {
 function tftp_make_rpi4_uefi() {
     tftp_rm_rpi4_boot_files
     for rpi4_boot_file in ${rpi4_boot_files[*]}; do
-        if [ -f "$WORKSPACE"/UEFI/"$rpi4_boot_file" ]; then 
-            cp "$WORKSPACE"/UEFI/"$rpi4_boot_file" "$WORKSPACE"/tftp_boot/
+        if [ -f "$WORKSPACE"/UEFI/"$rpi4_boot_file" ]; then
+            cp -rf "$WORKSPACE"/UEFI/"$rpi4_boot_file" "$WORKSPACE"/tftp_boot/
         fi
     done
 }
@@ -125,8 +125,8 @@ function tftp_make_rpi4_uefi() {
 function tftp_make_rpi4_uboot() {
     tftp_rm_rpi4_boot_files
     for rpi4_boot_file in ${rpi4_boot_files[*]}; do
-        if [ -f "$EDEN_DIR"/dist/default-images/eve/"$rpi4_boot_file" ]; then 
-            cp "$EDEN_DIR"/dist/default-images/eve/"$rpi4_boot_file" "$WORKSPACE"/tftp_boot/
+        if [ -f "$EDEN_DIR"/dist/default-images/eve/"$rpi4_boot_file" ] || [ -d "$EDEN_DIR"/dist/default-images/eve/"$rpi4_boot_file" ]; then 
+            cp -rf "$EDEN_DIR"/dist/default-images/eve/"$rpi4_boot_file" "$WORKSPACE"/tftp_boot/
         fi
     done
 }
